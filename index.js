@@ -32,16 +32,18 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-app.post("/webhook", (req, res) => {
+app.post("/webhook", async (req, res) => {
   let body = req.body;
   console.log(JSON.stringify(body, null, 2)); //checking incoming webhook message
+  // console.log("req consoled");
 
   if (body.object) {
+    // console.log(body.entry[0].changes[0].value);
     if (
       body.entry &&
       body.entry[0].changes &&
-      body.entry[0].changes[0].value.message &&
-      body.entry[0].changes[0].value.message[0]
+      body.entry[0].changes[0].value.messages &&
+      body.entry[0].changes[0].value.messages[0]
     ) {
       let phone_number_id =
         body.entry[0].changes[0].value.metadata.phone_number_id;
@@ -49,7 +51,10 @@ app.post("/webhook", (req, res) => {
       let from = body.entry[0].changes[0].value.messages[0].from;
       let msg_body = body.entry[0].changes[0].value.messages[0].text.body;
 
-      axios({
+      console.log("from: " + from);
+      console.log("received: " + msg_body);
+
+      await axios({
         method: "POST",
         url:
           "https://graph.facebook.com/v15.0/" +
@@ -63,10 +68,10 @@ app.post("/webhook", (req, res) => {
         },
         headers: { "Content-Type": "application/json" },
       });
-
-      res.sendStatus(200);
+      console.log("token: " + token);
+      res.status(200).send("task done");
     } else {
-      res.sendStatus(404);
+      res.status(404).send("request format not correct");
     }
   }
 });
