@@ -64,7 +64,7 @@ app.post("/webhook", async (req, res) => {
         data: {
           messaging_product: "whatsapp",
           to: from,
-          text: { body: "message from webhook" },
+          text: { body: "you message was: " + msg_body },
         },
         headers: { "Content-Type": "application/json" },
       });
