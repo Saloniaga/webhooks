@@ -34,7 +34,7 @@ app.get("/webhook", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   let body = req.body;
-  console.log(JSON.stringify(body, null, 2)); //checking incoming webhook message
+  // console.log(JSON.stringify(body, null, 2)); //checking incoming webhook message
   // console.log("req consoled");
 
   if (body.object) {
@@ -49,27 +49,41 @@ app.post("/webhook", async (req, res) => {
         body.entry[0].changes[0].value.metadata.phone_number_id;
       //extracting phone number from webhook payload
       let from = body.entry[0].changes[0].value.messages[0].from;
-      let msg_body = body.entry[0].changes[0].value.messages[0].text.body;
+      // let msg_body = body.entry[0].changes[0].value.messages[0].text.body;
+
+      let msg_body =
+        body.entry[0].changes[0].value.messages[0].interactive.button_reply
+          .title; //FOR BUTTON REPLIES
 
       console.log("from: " + from);
       console.log("received: " + msg_body);
 
-      await axios({
-        method: "POST",
-        url:
+      try {
+        const url =
           "https://graph.facebook.com/v15.0/" +
           phone_number_id +
           "/messages?access_token=" +
-          token,
-        data: {
-          messaging_product: "whatsapp",
-          to: from,
-          text: { body: "you message was: " + msg_body },
-        },
-        headers: { "Content-Type": "application/json" },
-      });
-      console.log("token: " + token);
-      res.status(200).send("task done");
+          token;
+        let msg_reply =
+          msg_body === "YES!"
+            ? "Do you want to order more?"
+            : "What would you like us to improve?";
+        await axios({
+          method: "post",
+          url: url,
+          data: {
+            messaging_product: "whatsapp",
+            to: from,
+            text: { body: msg_reply },
+          },
+          headers: { "Content-Type": "application/json" },
+        });
+        console.log("everything is working");
+        res.status(200).send("task done");
+      } catch (error) {
+        console.log("could not handle req");
+        res.status(400).send("count not handle promise");
+      }
     } else {
       res.status(404).send("request format not correct");
     }
